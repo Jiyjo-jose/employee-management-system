@@ -2,7 +2,6 @@ package com.example.employeeManagement.serviceTest;
 
 import com.example.employeeManagement.contract.request.EmployeeRequest;
 import com.example.employeeManagement.contract.response.EmployeeResponse;
-import com.example.employeeManagement.controller.EmployeeController;
 import com.example.employeeManagement.model.Employee;
 import com.example.employeeManagement.repository.EmployeeRepository;
 import com.example.employeeManagement.service.EmployeeService;
@@ -18,12 +17,10 @@ import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
 public class ServiceTest {
     private ModelMapper modelMapper;
-    private EmployeeController employeeController;
     private EmployeeService employeeService;
     private EmployeeRepository employeeRepository;
     @BeforeEach
