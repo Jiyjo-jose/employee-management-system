@@ -5,6 +5,7 @@ import com.example.employeeManagement.contract.response.EmployeeResponse;
 import com.example.employeeManagement.model.Employee;
 import com.example.employeeManagement.repository.EmployeeRepository;
 import com.example.employeeManagement.service.EmployeeService;
+import jakarta.persistence.EntityNotFoundException;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
@@ -16,7 +17,11 @@ import java.util.List;
 import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyLong;
+import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 public class ServiceTest {
@@ -48,6 +53,19 @@ public class ServiceTest {
         Employee retrievedEmployee= employeeService.getById(id);
         assertEquals(sampleEmployee,retrievedEmployee);
     }
+    @Test
+    void testGetById_WhenEmployeeNotFound_ThrowsEntityNotFoundException() {
+
+        when(employeeRepository.findById(anyLong())).thenReturn(Optional.empty());
+
+        assertThrows(EntityNotFoundException.class, () -> {
+            employeeService.getById(1L);
+        });
+
+            verify(employeeRepository, times(1)).findById(1L);
+    }
+
+
     @Test
     void testGetByDepartment(){
         String department= "DEPARTMENT";

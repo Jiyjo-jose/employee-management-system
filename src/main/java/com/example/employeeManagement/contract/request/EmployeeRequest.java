@@ -2,12 +2,13 @@ package com.example.employeeManagement.contract.request;
 
 import jakarta.validation.constraints.NotBlank;
 import lombok.AllArgsConstructor;
-import lombok.Data;
 import jakarta.validation.constraints.Email;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
 
-@Data
+@Getter
 @AllArgsConstructor
-
+@NoArgsConstructor
 
 public class EmployeeRequest {
     @NotBlank( message = "Name cannot be blank")
