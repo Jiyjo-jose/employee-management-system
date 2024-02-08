@@ -2,19 +2,24 @@ package com.example.employeeManagement.serviceTest;
 
 import com.example.employeeManagement.contract.request.EmployeeRequest;
 import com.example.employeeManagement.contract.response.EmployeeResponse;
+import com.example.employeeManagement.exception.DepartmentNotFoundException;
+import com.example.employeeManagement.exception.EmailAlreadyExistsException;
+import com.example.employeeManagement.exception.EmployeeNotFoundException;
 import com.example.employeeManagement.model.Employee;
 import com.example.employeeManagement.repository.EmployeeRepository;
 import com.example.employeeManagement.service.EmployeeService;
-import jakarta.persistence.EntityNotFoundException;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
 import org.mockito.MockitoAnnotations;
 import org.modelmapper.ModelMapper;
 
+
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
@@ -35,16 +40,22 @@ public class ServiceTest {
         modelMapper=new ModelMapper();
         employeeService=new EmployeeService(employeeRepository,modelMapper);
     }
-
     @Test
-    void testAddEmployee(){
-        EmployeeRequest employeeRequest = new EmployeeRequest(null,null,null);
-        Employee savedEmployee= new Employee(1L,null,null,null);
-        EmployeeResponse expectedResponse= modelMapper.map(savedEmployee,EmployeeResponse.class);
-        when(employeeRepository.save(any())).thenReturn(savedEmployee);
-        EmployeeResponse actualResponse=employeeService.addEmployee(employeeRequest);
-        assertEquals(expectedResponse,actualResponse);
+    void testAddEmployee() {
+        EmployeeRequest request = new EmployeeRequest("jj", "department", "jj@gmail.com");
+        Employee employee = modelMapper.map(request, Employee.class);
+        EmployeeResponse expectedResponse = modelMapper.map(employee, EmployeeResponse.class);
+
+        when(employeeRepository.existsByEmail(request.getEmail())).thenReturn(true);
+        assertThrows(
+                EmailAlreadyExistsException.class, () -> employeeService.addEmployee(request));
+        when(employeeRepository.existsByEmail(request.getEmail())).thenReturn(false);
+        when(employeeRepository.save(any())).thenReturn(employee);
+
+        EmployeeResponse actualResponse = employeeService.addEmployee(request);
+        assertEquals(expectedResponse, actualResponse);
     }
+
     @Test
     void testGetById(){
         Employee sampleEmployee= new Employee(1L,null,null,null);
@@ -54,24 +65,37 @@ public class ServiceTest {
         assertEquals(sampleEmployee,retrievedEmployee);
     }
     @Test
-    void testGetById_WhenEmployeeNotFound_ThrowsEntityNotFoundException() {
+    void testGetById_WhenEmployeeNotFound_ThrowsEmployeeNotFoundException() {
 
         when(employeeRepository.findById(anyLong())).thenReturn(Optional.empty());
 
-        assertThrows(EntityNotFoundException.class, () -> {
+        assertThrows(EmployeeNotFoundException.class, () -> {
             employeeService.getById(1L);
         });
 
             verify(employeeRepository, times(1)).findById(1L);
     }
-
-
     @Test
-    void testGetByDepartment(){
-        String department= "DEPARTMENT";
-        List<Employee> sampleEmployee= Collections.singletonList(new Employee(1L,null,null,null));
-        when(employeeRepository.findByDepartment(department.valueOf(department))).thenReturn(Optional.of(sampleEmployee));
-        List<EmployeeResponse>employeeResponses=employeeService.getByDepartment(department);
-        assertEquals(0,employeeResponses.size());
+    void testGetByDepartment() {
+        String department = "Development";
+        Employee employeeOne = new Employee(1L, "jj", "jj@gmail.com", department);
+        Employee employeeTwo = new Employee(1L, "jjj", "jjj@gmail.com", department);
+
+        List<Employee> employees = Arrays.asList(employeeOne, employeeTwo);
+        List<EmployeeResponse> expectedResponse =
+                employees.stream()
+                        .map(employee -> modelMapper.map(employee, EmployeeResponse.class))
+                        .collect(Collectors.toList());
+
+        when(employeeRepository.findByDepartment(department)).thenReturn(Collections.emptyList());
+        assertThrows(
+                DepartmentNotFoundException.class,
+                () -> employeeService.getByDepartment(department));
+        when(employeeRepository.findByDepartment(department)).thenReturn(employees);
+        List<EmployeeResponse> actualResponse =
+                employeeService.getByDepartment(department);
+        assertEquals(expectedResponse, actualResponse);
     }
+
+
 }

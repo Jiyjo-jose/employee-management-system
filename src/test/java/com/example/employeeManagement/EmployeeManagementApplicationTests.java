@@ -9,5 +9,11 @@ class EmployeeManagementApplicationTests {
 	@Test
 	void contextLoads() {
 	}
+	@Test
+	public void main()
+	{
+		EmployeeManagementApplication.main(new String[]{});
+	}
+
 
 }
